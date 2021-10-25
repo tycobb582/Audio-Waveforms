@@ -1,7 +1,9 @@
 # the foundation for this code was taken from https://www.youtube.com/watch?v=4rzpMA6CUPg
 # and https://stackoverflow.com/questions/23154400/read-the-data-of-a-single-channel-from-a-stereo-wave-file-in-python
+# info on simple_audio https://realpython.com/playing-and-recording-sound-python/#simpleaudio
 import scipy.io.wavfile as wf
 import numpy as np
+#import simpleaudio as sa
 import time
 import sys
 import random
@@ -76,12 +78,21 @@ def test(wave):
         wave[i] += step
     return wave
 
+def play_output(filename):
+    """
+    Takes the filename of a .wav file and plays the sound
+    """
+    wave_obj = sa.WaveObject.from_wave_file(filename)
+    play_obj = wave_obj.play()
+    play_obj.wait_done()
+
 ##################################MAIN#######################################
 
 wav, rate = get_wave_array(input)
-wav = clip_start_and_end(wav)
+#wav = clip_start_and_end(wav)
 #print_wave(wav)
 wave = test(wav)
 
 print(f"Program executed in {time.time()-start_time} seconds")
 create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
+#play_output(f"{input[:-4]}out.wav")
