@@ -63,6 +63,17 @@ def clip_start_and_end(wave):
     clipped_wave = wave[start_index:end_index+1]
     return clipped_wave
 
+def volume(wave, factor):
+    """
+    Function to adjust volume of a sound clip
+    :param wave: A .wav file in numpy array form
+    :param factor: The factor to adjust the volume by
+    :return: The volume-adjusted wave array
+    """
+    for i in range(len(wave) - 1):
+        wave[i] *= factor
+    return wave
+
 def sin(wave, sin_factor=2000):
     j = 0
     for i in range(len(wave)):
@@ -90,8 +101,8 @@ def play_output(filename):
 
 wav, rate = get_wave_array(input)
 #wav = clip_start_and_end(wav)
-#print_wave(wav)
-wave = test(wav)
+print_wave(wav)
+#wave = test(wav)
 
 print(f"Program executed in {time.time()-start_time} seconds")
 create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
