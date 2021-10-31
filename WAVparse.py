@@ -13,7 +13,7 @@ import os
 ##################################INITIALIZATION##############################
 
 start_time = time.time()
-    
+
 try:
     input = sys.argv[1]
 except:
@@ -23,18 +23,42 @@ except:
 ##################################FUNCTIONS##################################
 
 def get_wave_array(file_name_str):
+    """
+    Gets aa array from a given wav file simplifying to mono
+    :param file_name_str: full file name and path
+    :return: wav array, rate
+    """
     rate, data = wf.read(file_name_str)
-    wave = data[:, 0]
+    wave = data[:, 0] # this is extracting the first column from each array in a 2D array containing the information
+    # from both audio channels
     return wave, rate
                         
 def print_wave(wave):
+    """
+    prints an entire wav array CAUTION THIS COULD OVERLOAD OUTPUT AND CRASH
+    :param wave: wav array
+    :return:
+    """
     np.set_printoptions(threshold=sys.maxsize)
     print(wave)
 
 def create_wave(wave, rate=44100, file_name="output.wav"):
+    """
+    Creates a wav file from the given wav array and information
+    :param wave: 
+    :param rate: 
+    :param file_name: 
+    :return: 
+    """
     wf.write(file_name, rate, wave)
 
 def noise(wave, static_factor=10000):
+    """
+    adds a static effect to the given wav array
+    :param wave: array from wav file
+    :param static_factor: The ammount of static
+    :return: altered wav array
+    """
     for i in range(len(wave)):
         wave[i] += random.randint(-static_factor, static_factor)
     return wave
@@ -76,6 +100,12 @@ def volume(wave, factor):
     return wave
 
 def sin(wave, sin_factor=2000):
+    """
+    Takes a wav array and modulates each point by a sin wave at the given frequency
+    :param wave: array from wave file
+    :param sin_factor:
+    :return: altered wav array
+    """
     j = 0
     for i in range(len(wave)):
         tmp = math.sin(j) * sin_factor
@@ -84,11 +114,6 @@ def sin(wave, sin_factor=2000):
         j += 0.0006
     return wave
 
-def test(wave):
-    for i in range(len(wave)):
-        step = wave[i] - wave[i-1]
-        wave[i] += step
-    return wave
 
 def average_of_sounds(folder):
     """

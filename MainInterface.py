@@ -64,7 +64,7 @@ class Window(QMainWindow):
             vecs.append(wav)  # add the vector to the list]
         clamped_vecs = []
         for vec in vecs:
-            clamped_vecs.append(clamp(vec, max_length))
+            clamped_vecs.append(vec[max_length])
             print(len(vec))
         print(self.final_wave_array)
         mat = np.asarray(clamped_vecs)
