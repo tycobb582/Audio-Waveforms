@@ -144,6 +144,43 @@ def play_output(filename):
     play_obj = wave_obj.play()
     play_obj.wait_done()
 
+def build_cov_matrix(in_folder):
+    """
+    builds a covariance matrix out of the wav arrays of all files in a given folder
+    :param in_folder: input folder of wav files
+    :return: covariance matrix
+    """
+    start_time = time.time()
+    max_length = 10000000000
+    vecs = []  # blank list for wave vectors
+    # try:
+    for file in os.listdir(in_folder):
+        file_name = os.path.join(in_folder, file)
+        wav, rate = get_wave_array(file_name)  # find vector from file
+        max_length = min(wav.size, max_length)
+        vecs.append(wav)  # add the vector to the list]
+    clamped_vecs = []
+    for vec in vecs:
+        clamped_vecs.append(vec[:max_length])
+    mat = np.asarray(clamped_vecs)
+    cov_mat = np.cov(mat)
+    return cov_mat, rate
+
+def get_eigen_vecs(cov):
+    """
+    create a
+    :param cov: covariance matrix of multiple wav arrays
+    :return:
+    """
+    eigs = np.linalg.eig(cov) # eigs[0] == eigne values list eigs[1] == 2D array of eigenvectors
+    linear_combination = np.linalg.solve(eigs[1], eigs[0])
+    print(linear_combination)
+    final_wav_array = linear_combination
+    return eigs, final_wav_array# this isn't really supposed to be here but I use it for testing
+
+    #print(f"Program executed in {time.time() - start_time} seconds")
+
+
 ##################################MAIN#######################################
 
 # wav, rate = get_wave_array(input)

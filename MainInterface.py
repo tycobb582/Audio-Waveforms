@@ -16,7 +16,7 @@ class Window(QMainWindow):
         super().__init__()
         self.win_width = 800
         self.win_height = 600
-        self.rate = 0
+        self.rate = 44100
         self.final_wave_array = []
         self.save_file_name = "output"
         self.eigs = []
@@ -43,6 +43,10 @@ class Window(QMainWindow):
         self.out_pick_button.move(self.win_width // 4, self.win_height // 20 * 4)
         self.out_pick_button.clicked.connect(self.out_pick)
 
+        self.out_pick_button = QPushButton("Play Audio", self)
+        self.out_pick_button.move(self.win_width // 4 * 3, self.win_height // 20 * 2)
+        self.out_pick_button.clicked.connect(self.play_audio)
+
         self.show()
 
     @pyqtSlot()
@@ -53,33 +57,8 @@ class Window(QMainWindow):
 
     @pyqtSlot()
     def build_matrix(self):
-        start_time = time.time()
-        max_length = 10000000000
-        vecs = []  # blank list for wave vectors
-        # try:
-        for file in os.listdir(self.in_folder):
-            file_name = os.path.join(self.in_folder, file)
-            wav, self.rate = WAVp.get_wave_array(file_name)  # find vector from file
-            max_length = min(wav.size, max_length)
-            vecs.append(wav)  # add the vector to the list]
-        clamped_vecs = []
-        for vec in vecs:
-            clamped_vecs.append(vec[max_length])
-            print(len(vec))
-        print(self.final_wave_array)
-        mat = np.asarray(clamped_vecs)
-        # mat = np.matrix(*clamped_vecs)
-        self.cov = np.cov(mat)
-        self.eigs, self.eig_vals = np.linalg.eig(self.cov)
-        r_coefs = []
-        for i in range(len(self.eigs[0])):
-            r_coefs.append(random.randint(-100, 100))
-        # linear_combination = np.linalg.solve(self.eigs, self.eig_vals)
-        linear_combination = np.linalg.solve(self.eigs[0], self.eigs[1])
-        self.final_wave_array = linear_combination
-        print(f"Program executed in {time.time() - start_time} seconds")
-        # except:
-        #    print(f"{self.in_folder}is not a valid file path. Please change input folder name")
+        self.cov, self.rate = WAVp.build_cov_matrix(self.in_folder)
+        self.eig_vals, self.final_wave_array = WAVp.get_eigen_vecs(self.cov)
 
     @pyqtSlot()
     def out_pick(self):
@@ -94,6 +73,10 @@ class Window(QMainWindow):
         print("created wave file")
         # except:
         #    print(self.out_folder+"/"+self.save_file_name+".wav" + " is not a valid output directory. Change it or else")
+
+    @pyqtSlot()
+    def play_audio(self):
+        WAVp.play_output(self.out_folder + "/" + self.save_file_name + ".wav")
 
 app = QApplication(sys.argv)
 window = Window()
