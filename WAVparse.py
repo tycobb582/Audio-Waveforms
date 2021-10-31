@@ -3,11 +3,12 @@
 # info on simple_audio https://realpython.com/playing-and-recording-sound-python/#simpleaudio
 import scipy.io.wavfile as wf
 import numpy as np
-#import simpleaudio as sa
+import simpleaudio as sa
 import time
 import sys
 import random
 import math
+import os
 
 ##################################INITIALIZATION##############################
 
@@ -89,6 +90,27 @@ def test(wave):
         wave[i] += step
     return wave
 
+def average_of_sounds(folder):
+    """
+     Takes a folder containing .wav files of the exact same length, converts them into NumPy array,
+     averages these arrays, and creates a new .wav file from this average.
+     :param folder: The name of the folder with the .wav files to average, in string form
+     :return: Void
+     """
+    audio_folder = os.path.join(os.path.dirname(__file__), folder)
+    audio_set = os.listdir(audio_folder)
+    rate = None
+    wave_sum = None
+    for file in audio_set:
+        path = os.path.join(audio_folder, file)
+        wav, rate = get_wave_array(path)
+        if wave_sum is None:
+            wave_sum = wav
+        else:
+            wave_sum += wav
+    wave_average = wave_sum // len(audio_set)
+    create_wave(wave_average, rate, "average.wav")
+
 def play_output(filename):
     """
     Takes the filename of a .wav file and plays the sound
@@ -99,11 +121,11 @@ def play_output(filename):
 
 ##################################MAIN#######################################
 
-wav, rate = get_wave_array(input)
-#wav = clip_start_and_end(wav)
-print_wave(wav)
-#wave = test(wav)
-
-print(f"Program executed in {time.time()-start_time} seconds")
-create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
+# wav, rate = get_wave_array(input)
+# #wav = clip_start_and_end(wav)
+# print_wave(wav)
+# #wave = test(wav)
+#
+# print(f"Program executed in {time.time()-start_time} seconds")
+# create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
 #play_output(f"{input[:-4]}out.wav")
