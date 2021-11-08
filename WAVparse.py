@@ -111,6 +111,52 @@ def average_of_sounds(folder):
     wave_average = wave_sum // len(audio_set)
     create_wave(wave_average, rate, "average.wav")
 
+def pca(folder):
+    """
+    Performs principal component analysis on a set of .wav files
+    :param folder: The folder for the training data
+    :return: The mean array and the principal components
+    """
+    training_folder = os.path.join(os.path.dirname(__file__), folder)
+    observation_vectors = os.listdir(training_folder)
+    observation_matrix = None
+    count = 0
+    wave_sum = None
+    for file in observation_vectors:
+        path = os.path.join(training_folder, file)
+        wav, rate = get_wave_array(path)
+        if wave_sum is None:
+            wave_sum = wav
+        else:
+            wave_sum += wav
+        if observation_matrix is None:
+            observation_matrix = np.zeros((len(observation_vectors), np.shape(wav)[0]))
+            observation_matrix[0] = wav
+        else:
+            observation_matrix[count] = wav
+        count += 1
+    data_average = wave_sum // len(observation_vectors)
+
+    covariance = np.cov(np.transpose(observation_matrix))
+    eigen = np.linalg.eig(covariance)
+    vecs = np.transpose(eigen[1])   # Transposed to collect all eigenvector components in a single array
+    dict = {}   # Dictionary to keep track of which values correspond to which vectors
+    for i in range(len(eigen[0])):
+        dict[eigen[0][i]] = vecs[i]
+    vals = -np.sort(-eigen[0])  # Sort values, biggest ones first
+    count = 0
+    for i in vals:  # Sort array of vectors to match sorted array of values
+        vecs[count] = dict[i]
+        count += 1
+    vecs = vecs[0:50]   # Keep only the 50 most important components
+    vecs = np.transpose(vecs)   # Return the vector array to numpy matrix array form
+
+    T = np.zeros((len(observation_vectors), np.shape(observation_matrix[0])[0]))
+    for i in range(len(observation_vectors)):
+        T[i] = np.matmul((observation_matrix[i] - data_average), vecs)
+    return data_average, vecs
+
+
 def play_output(filename):
     """
     Takes the filename of a .wav file and plays the sound
@@ -121,11 +167,12 @@ def play_output(filename):
 
 ##################################MAIN#######################################
 
+pca("Train")
 # wav, rate = get_wave_array(input)
 # #wav = clip_start_and_end(wav)
 # print_wave(wav)
 # #wave = test(wav)
 #
-# print(f"Program executed in {time.time()-start_time} seconds")
+print(f"Program executed in {time.time()-start_time} seconds")
 # create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
 #play_output(f"{input[:-4]}out.wav")
