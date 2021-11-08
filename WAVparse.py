@@ -28,6 +28,7 @@ def get_wave_array(file_name_str):
     :param file_name_str: full file name and path
     :return: wav array, rate
     """
+    print(file_name_str)
     rate, data = wf.read(file_name_str)
     wave = data[:, 0] # this is extracting the first column from each array in a 2D array containing the information
     # from both audio channels
@@ -126,13 +127,19 @@ def average_of_sounds(input_folder, output_folder, write_file=True, file_name="a
     audio_set = os.listdir(audio_folder)
     rate = None
     wave_sum = None
+    max_len = 1000000000000
+    waves = []
     for file in audio_set:
         path = os.path.join(audio_folder, file)
         wav, rate = get_wave_array(path)
+        max_len = min(len(wav), max_len)
+        waves.append(wav)
+    for w in waves:
+        clipped_wav = w[:max_len]
         if wave_sum is None:
-            wave_sum = wav
+            wave_sum = clipped_wav
         else:
-            wave_sum += wav
+            wave_sum += clipped_wav
     wave_average = wave_sum // len(audio_set)
     if write_file:
         create_wave(wave_average, rate, output_folder + "/" + file_name + ".wav")

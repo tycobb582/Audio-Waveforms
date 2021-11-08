@@ -7,7 +7,7 @@ import sys
 import random
 import math
 import os
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QInputDialog
+from PyQt5.QtWidgets import *
 from PyQt5.QtCore import pyqtSlot
 import WAVparse as WAVp
 ##################################INITIALIZATION##############################
@@ -22,34 +22,51 @@ class Window(QMainWindow):
         self.eigs = []
         self.eig_vals = []
         self.setGeometry(400, 400, self.win_width, self.win_height)
+        #self.setLayout(QVBoxLayout)
         self.in_folder = "Audio files"
         self.out_folder = "Outputs"
         self.setWindowTitle("Eigenwave 9000")
+        self.buttons = []
+        self.cov = []
 
-        self.in_folder_button = QPushButton("Input Folder", self)
-        self.in_folder_button.move(self.win_width // 4, self.win_height // 20 * 2)
+        self.in_folder_button = QPushButton("INPUT FOLDER", self)
+        self.in_folder_button.setToolTip("Default = Audio files")
+        self.buttons.append(self.in_folder_button)
+        self.in_folder_button.move(1, 1) # col, row
         self.in_folder_button.clicked.connect(self.in_pick)
 
-        self.build_mat_button = QPushButton("Build Matrix", self)
-        self.build_mat_button.move(self.win_width // 4 * 2, self.win_height // 20 * 2)
-        self.cov = []
-        self.build_mat_button.clicked.connect(self.build_matrix)
+        self.test_button = QPushButton("CREATE TEST WAVE", self)
+        self.buttons.append(self.test_button)
+        self.test_button.move(2, 1)
+        self.test_button.clicked.connect(self.linear_combination)
 
-        self.output_button = QPushButton("Create File", self)
-        self.output_button.move(self.win_width // 4 * 2, self.win_height // 20 * 4)
+        self.output_button = QPushButton("CREATE FILES", self)
+        self.output_button.setToolTip("Default Name = output")
+        self.buttons.append(self.output_button)
+        self.output_button.move(3, 1)
         self.output_button.clicked.connect(self.do_output)
 
-        self.out_pick_button = QPushButton("Output Folder", self)
-        self.out_pick_button.move(self.win_width // 4, self.win_height // 20 * 4)
+        self.out_pick_button = QPushButton("OUTPUT FOLDER", self)
+        self.out_pick_button.setToolTip("Default = Outputs")
+        self.buttons.append(self.out_pick_button)
+        self.out_pick_button.move(1, 2)
         self.out_pick_button.clicked.connect(self.out_pick)
 
-        self.out_pick_button = QPushButton("Play Audio", self)
-        self.out_pick_button.move(self.win_width // 4 * 3, self.win_height // 20 * 2)
-        self.out_pick_button.clicked.connect(self.play_audio)
+        self.play_audio_button = QPushButton("PLAY AUDIO", self)
+        self.play_audio_button.setToolTip("Must have created file same as output name before playing")
+        self.buttons.append(self.play_audio_button)
+        self.play_audio_button .move(3, 2)
+        self.play_audio_button .clicked.connect(self.play_audio)
 
-        self.out_pick_button = QPushButton("Create Average Sound", self)
-        self.out_pick_button.move(self.win_width // 4 * 3, self.win_height // 20 * 4)
-        self.out_pick_button.clicked.connect(self.average)
+        self.average_button = QPushButton("CREATE AVERAGE SOUND", self)
+        self.buttons.append(self.average_button)
+        self.average_button.move(2, 2)
+        self.average_button.clicked.connect(self.average)
+
+        # apply standard transformations
+        for b in self.buttons:
+            b.setGeometry(b.x(), b.y(), 200, 100)# set new size
+            b.setGeometry(b.width() * b.x() - b.width() // 2, b.y() * b.height(), b.width(), b.height())# center
 
         self.show()
 
@@ -60,9 +77,13 @@ class Window(QMainWindow):
         print(f"changed input folder to \"{self.in_folder}\"")
 
     @pyqtSlot()
-    def build_matrix(self):
+    def linear_combination(self):
         self.cov, self.rate = WAVp.build_cov_matrix(self.in_folder)
         self.eig_vals, self.final_wave_array = WAVp.get_eigen_vecs(self.cov)
+        # output
+        self.save_file_name, _ = QInputDialog.getText(self, 'Input Dialog', 'Output File Name:')
+        wf.write(self.out_folder + "/" + self.save_file_name + ".wav", self.rate, self.final_wave_array)
+        print("created wave file")
 
     @pyqtSlot()
     def out_pick(self):
