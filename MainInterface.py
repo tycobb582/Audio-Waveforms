@@ -47,6 +47,10 @@ class Window(QMainWindow):
         self.out_pick_button.move(self.win_width // 4 * 3, self.win_height // 20 * 2)
         self.out_pick_button.clicked.connect(self.play_audio)
 
+        self.out_pick_button = QPushButton("Create Average Sound", self)
+        self.out_pick_button.move(self.win_width // 4 * 3, self.win_height // 20 * 4)
+        self.out_pick_button.clicked.connect(self.average)
+
         self.show()
 
     @pyqtSlot()
@@ -77,6 +81,10 @@ class Window(QMainWindow):
     @pyqtSlot()
     def play_audio(self):
         WAVp.play_output(self.out_folder + "/" + self.save_file_name + ".wav")
+
+    @pyqtSlot()
+    def average(self):
+        self.final_wave_array, self.rate = WAVp.average_of_sounds(self.in_folder, self.out_folder, file_name=self.save_file_name)
 
 app = QApplication(sys.argv)
 window = Window()

@@ -115,14 +115,14 @@ def sin(wave, sin_factor=2000):
     return wave
 
 
-def average_of_sounds(folder):
+def average_of_sounds(input_folder, output_folder, write_file=True, file_name="average"):
     """
      Takes a folder containing .wav files of the exact same length, converts them into NumPy array,
      averages these arrays, and creates a new .wav file from this average.
      :param folder: The name of the folder with the .wav files to average, in string form
-     :return: Void
+     :return average wav array: Elijah added this so I could use it with the MainInterface
      """
-    audio_folder = os.path.join(os.path.dirname(__file__), folder)
+    audio_folder = os.path.join(os.path.dirname(__file__), input_folder)
     audio_set = os.listdir(audio_folder)
     rate = None
     wave_sum = None
@@ -134,7 +134,9 @@ def average_of_sounds(folder):
         else:
             wave_sum += wav
     wave_average = wave_sum // len(audio_set)
-    create_wave(wave_average, rate, "average.wav")
+    if write_file:
+        create_wave(wave_average, rate, output_folder + "/" + file_name + ".wav")
+    return wave_average, rate # Elijah added this so I could use it with the MainInterface
 
 def play_output(filename):
     """
