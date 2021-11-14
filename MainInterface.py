@@ -105,7 +105,7 @@ class Window(QMainWindow):
 
     @pyqtSlot()
     def average(self):
-        self.final_wave_array, self.rate = WAVp.average_of_sounds(self.in_folder, self.out_folder, file_name=self.save_file_name)
+        self.final_wave_array, self.rate = WAVp.average_of_sounds(self.in_folder, self.out_folder, file_name=self.save_file_name, write_file=True)
 
 app = QApplication(sys.argv)
 window = Window()

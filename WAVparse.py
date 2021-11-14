@@ -237,13 +237,13 @@ def get_eigen_vecs(cov):
 
 
 ##################################MAIN#######################################
-
-pca("Train")
-# wav, rate = get_wave_array(input)
-# #wav = clip_start_and_end(wav)
-# print_wave(wav)
-# #wave = test(wav)
-#
-print(f"Program executed in {time.time()-start_time} seconds")
-# create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
-#play_output(f"{input[:-4]}out.wav")
+if __name__ == "__main__":
+    pca("Train")
+    # wav, rate = get_wave_array(input)
+    # #wav = clip_start_and_end(wav)
+    # print_wave(wav)
+    # #wave = test(wav)
+    #
+    print(f"Program executed in {time.time()-start_time} seconds")
+    # create_wave(wav, rate=rate, file_name=input[:-4]+"out"+".wav")
+    #play_output(f"{input[:-4]}out.wav")
