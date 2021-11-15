@@ -53,7 +53,7 @@ class Window(QMainWindow):
         self.out_pick_button.clicked.connect(self.out_pick)
 
         self.play_audio_button = QPushButton("PLAY AUDIO", self)
-        self.play_audio_button.setToolTip("Must have created file same as output name before playing")
+        self.play_audio_button.setToolTip("Creates a file with the given \noutput name then plays it")
         self.buttons.append(self.play_audio_button)
         self.play_audio_button .move(3, 2)
         self.play_audio_button .clicked.connect(self.play_audio)
@@ -101,11 +101,12 @@ class Window(QMainWindow):
 
     @pyqtSlot()
     def play_audio(self):
+        self.do_output()
         WAVp.play_output(self.out_folder + "/" + self.save_file_name + ".wav")
 
     @pyqtSlot()
     def average(self):
-        self.final_wave_array, self.rate = WAVp.average_of_sounds(self.in_folder, self.out_folder, file_name=self.save_file_name, write_file=True)
+        self.final_wave_array, self.rate = WAVp.average_of_sounds(self.in_folder, self.out_folder, file_name=self.save_file_name, write_file=False)
 
 app = QApplication(sys.argv)
 window = Window()
