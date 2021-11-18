@@ -127,7 +127,6 @@ def average_of_sounds(input_folder, output_folder, write_file=True, file_name="a
     audio_folder = os.path.join(os.path.dirname(__file__), input_folder)
     audio_set = os.listdir(audio_folder)
     rate = None
-    wave_sum = None
     max_len = 1000000000000
     waves = []
     for file in audio_set:
@@ -135,16 +134,11 @@ def average_of_sounds(input_folder, output_folder, write_file=True, file_name="a
         wav, rate = get_wave_array(path)
         max_len = min(len(wav), max_len)
         waves.append(wav)
-    for w in waves:
-        clipped_wav = w[:max_len]
-        if wave_sum is None:
-            wave_sum = clipped_wav
-        else:
-            wave_sum += clipped_wav
-    wave_average = wave_sum // len(audio_set)
+    wave_average = np.asarray(waves).mean(0, int)
     if write_file:
         create_wave(wave_average, rate, output_folder + "/" + file_name + ".wav")
-    return wave_average, rate # Elijah added this so I could use it with the MainInterface
+    return wave_average, rate   # Elijah - added this so I could use it with the MainInterface
+
 
 def pca(folder):
     """
@@ -152,13 +146,29 @@ def pca(folder):
     :param folder: The folder for the training data
     :return: The mean array and the principal components
     """
-    training_folder = os.path.join(os.path.dirname(__file__), folder)
-    observation_vectors = os.listdir(training_folder)
+    OM = wav_observation_mat(folder)
+    data_average = OM.mean(0, int)  # Average values through each column, keeps them int type
+    eigs = cov_eig(OM)
+
+    T = np.zeros((len(OM), np.shape(OM[0])[0]))
+    for i in range(len(OM)):
+        T[i] = np.matmul((OM[i] - data_average), eigs)
+    return data_average, eigs
+
+
+def wav_observation_mat(folder):
+    """
+    Converts .wav files into numpy arrays and constructs an observation matrix from those arrays
+    :param folder: The folder with the files you want to build the matrix out of
+    :return: The observation matrix in numpy array form
+    """
+    search_folder = os.path.join(os.path.dirname(__file__), folder)
+    observation_vectors = os.listdir(search_folder)
     observation_matrix = None
     count = 0
     wave_sum = None
     for file in observation_vectors:
-        path = os.path.join(training_folder, file)
+        path = os.path.join(search_folder, file)
         wav, rate = get_wave_array(path)
         if wave_sum is None:
             wave_sum = wav
@@ -170,10 +180,18 @@ def pca(folder):
         else:
             observation_matrix[count] = wav
         count += 1
-    data_average = wave_sum // len(observation_vectors)
+    return observation_matrix
+    #covariance = np.cov(np.transpose(observation_matrix))
+    #print("Loading eigen vectors...\nThis may take several minutes")
 
-    covariance = np.cov(np.transpose(observation_matrix))
-    print("Loading eigen vectors...\nThis may take several minutes")
+def cov_eig(om, keep=50):
+    """
+    Finds the eigenvectors of a covariance matrix, sorts them by importance, and delivers the specified amount
+    :param om: The observation matrix to build the covariances from
+    :param keep: Number of eigenvectors to keep
+    :return: The requested set of eigenvectors
+    """
+    covariance = np.cov(np.transpose(om))
     eigen = np.linalg.eig(covariance)
     print("Done loading eigen vectors")
     vecs = np.transpose(eigen[1])   # Transposed to collect all eigenvector components in a single array
@@ -194,11 +212,34 @@ def pca(folder):
     for i in range(len(observation_vectors)):
         T[i] = np.matmul((observation_matrix[i] - data_average), vecs)
     return data_average, vecs
+    # vecs = vecs[0:keep]   # Keep only the 50 most important components
+    # return vecs # these two lines got mixed up while trying to push my changes
+
+
+def combine(eigs, coefficients):
+    """
+    Creates a numpy array that is a linear combination of a set of eigenvectors
+    :param eigs: The set of eigenvectors to combine
+    :param coefficients: A numpy array of coefficients to multiple the eigenvectors by. Must be the same length as the set of eigs.
+    :return: The resulting sum
+    """
+    if isinstance(coefficients, np.ndarray) and np.shape(coefficients)[1] == np.shape(eigs)[0]:
+        pass
+    else:
+        raise TypeError("Coefficients must be provided as a numpy array with the same length as the number of eigenvectors.")
+    sum = 0
+    eigs = eigs.real    # Convert from complex to real numbers
+    for i in range(len(eigs)):
+        sum += np.multiply(eigs[i], coefficients[0][i])
+    sum = np.transpose(np.asarray(sum)) # Return vectors to numpy form
+    return np.around(sum)   # Sum must be rounded to create a .wav
 
 def write_vecs(vecs, file_name="pca vectors"):
+    """Writes a .npy file containing the given numpy array"""
     np.save("Data Files/" + file_name, vecs)
 
 def read_vecs(file_name="pca vectors"):
+    """Reads a numpy array from the .npy file"""
     vecs = np.load("Data Files/" + file_name)
     return vecs
 
@@ -210,13 +251,14 @@ def play_output(filename):
     play_obj = wave_obj.play()
     play_obj.wait_done()
 
+
 def build_cov_matrix(in_folder):
     """
     builds a covariance matrix out of the wav arrays of all files in a given folder
     :param in_folder: input folder of wav files
     :return: covariance matrix
     """
-    start_time = time.time()
+    rate = 0
     max_length = 10000000000
     vecs = []  # blank list for wave vectors
     # try:
@@ -238,11 +280,11 @@ def get_eigen_vecs(cov):
     :param cov: covariance matrix of multiple wav arrays
     :return:
     """
-    eigs = np.linalg.eig(cov) # eigs[0] == eigne values list eigs[1] == 2D array of eigenvectors
+    eigs = np.linalg.eig(cov) # eigs[0] == eigen values list eigs[1] == 2D array of eigenvectors
     linear_combination = np.linalg.solve(eigs[1], eigs[0])
     print(linear_combination)
     final_wav_array = linear_combination
-    return eigs, final_wav_array# this isn't really supposed to be here but I use it for testing
+    return final_wav_array# this isn't really supposed to be here but I use it for testing
 
     #print(f"Program executed in {time.time() - start_time} seconds")
 
