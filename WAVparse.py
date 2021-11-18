@@ -1,5 +1,6 @@
-# the foundation for this code was taken from https://www.youtube.com/watch?v=4rzpMA6CUPg
-# and https://stackoverflow.com/questions/23154400/read-the-data-of-a-single-channel-from-a-stereo-wave-file-in-python
+# some of the foundation for this code was made with the help of these resources
+# https://www.youtube.com/watch?v=4rzpMA6CUPg
+# https://stackoverflow.com/questions/23154400/read-the-data-of-a-single-channel-from-a-stereo-wave-file-in-python
 # info on simple_audio https://realpython.com/playing-and-recording-sound-python/#simpleaudio
 import scipy.io.wavfile as wf
 import numpy as np
@@ -172,7 +173,9 @@ def pca(folder):
     data_average = wave_sum // len(observation_vectors)
 
     covariance = np.cov(np.transpose(observation_matrix))
+    print("Loading eigen vectors...\nThis may take several minutes")
     eigen = np.linalg.eig(covariance)
+    print("Done loading eigen vectors")
     vecs = np.transpose(eigen[1])   # Transposed to collect all eigenvector components in a single array
     dict = {}   # Dictionary to keep track of which values correspond to which vectors
     for i in range(len(eigen[0])):
@@ -183,13 +186,21 @@ def pca(folder):
         vecs[count] = dict[i]
         count += 1
     vecs = vecs[0:50]   # Keep only the 50 most important components
+    write_vecs(vecs)
     vecs = np.transpose(vecs)   # Return the vector array to numpy matrix array form
-
-    T = np.zeros((len(observation_vectors), np.shape(observation_matrix[0])[0]))
+    r = len(observation_vectors) # row and column counts
+    c = np.shape(observation_matrix[0])[0]
+    T = np.zeros((r, c))
     for i in range(len(observation_vectors)):
         T[i] = np.matmul((observation_matrix[i] - data_average), vecs)
     return data_average, vecs
 
+def write_vecs(vecs, file_name="pca vectors"):
+    np.save("Data Files/" + file_name, vecs)
+
+def read_vecs(file_name="pca vectors"):
+    vecs = np.load("Data Files/" + file_name)
+    return vecs
 
 def play_output(filename):
     """
@@ -238,7 +249,7 @@ def get_eigen_vecs(cov):
 
 ##################################MAIN#######################################
 if __name__ == "__main__":
-    pca("Train")
+    avg = pca("Train")
     # wav, rate = get_wave_array(input)
     # #wav = clip_start_and_end(wav)
     # print_wave(wav)
