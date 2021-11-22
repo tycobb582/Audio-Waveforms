@@ -148,7 +148,10 @@ def pca(folder):
     """
     OM = wav_observation_mat(folder)
     data_average = OM.mean(0, int)  # Average values through each column, keeps them int type
-    eigs = cov_eig(OM)
+    if os.path.exists("Data Files/" + folder + ".npy"):
+       eigs = read_vecs(folder) 
+    else:
+        eigs = cov_eig(OM, folder)
 
     T = np.zeros((len(OM), np.shape(OM[0])[0]))
     for i in range(len(OM)):
@@ -184,13 +187,14 @@ def wav_observation_mat(folder):
     #covariance = np.cov(np.transpose(observation_matrix))
     #print("Loading eigen vectors...\nThis may take several minutes")
 
-def cov_eig(om, keep=50):
+def cov_eig(om, write_to_name, keep=50):
     """
     Finds the eigenvectors of a covariance matrix, sorts them by importance, and delivers the specified amount
     :param om: The observation matrix to build the covariances from
     :param keep: Number of eigenvectors to keep
     :return: The requested set of eigenvectors
     """
+    print("Loading eigen vectors...")
     covariance = np.cov(np.transpose(om))
     eigen = np.linalg.eig(covariance)
     print("Done loading eigen vectors")
@@ -204,7 +208,7 @@ def cov_eig(om, keep=50):
         vecs[count] = dict[i]
         count += 1
     vecs = vecs[0:50]   # Keep only the 50 most important components
-    write_vecs(vecs)
+    write_vecs(vecs, write_to_name) #save them to a file
     vecs = np.transpose(vecs)   # Return the vector array to numpy matrix array form
     r = len(observation_vectors) # row and column counts
     c = np.shape(observation_matrix[0])[0]
@@ -235,12 +239,12 @@ def combine(eigs, coefficients):
     return np.around(sum)   # Sum must be rounded to create a .wav
 
 def write_vecs(vecs, file_name="pca vectors"):
-    """Writes a .npy file containing the given numpy array"""
+    """Writes a .npy file containing the given numpy array in the Data Files folder"""
     np.save("Data Files/" + file_name, vecs)
 
 def read_vecs(file_name="pca vectors"):
-    """Reads a numpy array from the .npy file"""
-    vecs = np.load("Data Files/" + file_name)
+    """Reads a numpy array from the .npy file in the Data Files Folder"""
+    vecs = np.load("Data Files/" + file_name + ".npy")
     return vecs
 
 def play_output(filename):
