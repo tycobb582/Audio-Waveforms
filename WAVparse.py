@@ -152,12 +152,10 @@ def pca(folder):
        eigs = read_vecs(folder) 
     else:
         eigs = cov_eig(OM, folder)
-
     T = np.zeros((len(OM), np.shape(OM[0])[0]))
     for i in range(len(OM)):
         T[i] = np.matmul((OM[i] - data_average), eigs)
     return data_average, eigs
-
 
 def wav_observation_mat(folder):
     """
@@ -183,9 +181,7 @@ def wav_observation_mat(folder):
         else:
             observation_matrix[count] = wav
         count += 1
-    return observation_matrix
-    #covariance = np.cov(np.transpose(observation_matrix))
-    #print("Loading eigen vectors...\nThis may take several minutes")
+    return observation_matrix, rate
 
 def cov_eig(om, write_to_name, keep=50):
     """
@@ -207,20 +203,11 @@ def cov_eig(om, write_to_name, keep=50):
     for i in vals:  # Sort array of vectors to match sorted array of values
         vecs[count] = dict[i]
         count += 1
-    vecs = vecs[0:50]   # Keep only the 50 most important components
+    vecs = vecs[0:keep]   # Keep only the 50 most important components
     write_vecs(vecs, write_to_name) #save them to a file
-    vecs = np.transpose(vecs)   # Return the vector array to numpy matrix array form
-    r = len(observation_vectors) # row and column counts
-    c = np.shape(observation_matrix[0])[0]
-    T = np.zeros((r, c))
-    for i in range(len(observation_vectors)):
-        T[i] = np.matmul((observation_matrix[i] - data_average), vecs)
-    return data_average, vecs
-    # vecs = vecs[0:keep]   # Keep only the 50 most important components
-    # return vecs # these two lines got mixed up while trying to push my changes
+    return vecs
 
-
-def combine(eigs, coefficients):
+def combine(eigs, coefficients, rate=44100, write_file=False, file_name="new_combination"):
     """
     Creates a numpy array that is a linear combination of a set of eigenvectors
     :param eigs: The set of eigenvectors to combine
@@ -236,6 +223,8 @@ def combine(eigs, coefficients):
     for i in range(len(eigs)):
         sum += np.multiply(eigs[i], coefficients[0][i])
     sum = np.transpose(np.asarray(sum)) # Return vectors to numpy form
+    if write_file:
+        create_wave(sum, rate, "Linear Combinations/" + file_name + ".wav")
     return np.around(sum)   # Sum must be rounded to create a .wav
 
 def write_vecs(vecs, file_name="pca vectors"):
@@ -256,46 +245,11 @@ def play_output(filename):
     play_obj.wait_done()
 
 
-def build_cov_matrix(in_folder):
-    """
-    builds a covariance matrix out of the wav arrays of all files in a given folder
-    :param in_folder: input folder of wav files
-    :return: covariance matrix
-    """
-    rate = 0
-    max_length = 10000000000
-    vecs = []  # blank list for wave vectors
-    # try:
-    for file in os.listdir(in_folder):
-        file_name = os.path.join(in_folder, file)
-        wav, rate = get_wave_array(file_name)  # find vector from file
-        max_length = min(wav.size, max_length)
-        vecs.append(wav)  # add the vector to the list]
-    clamped_vecs = []
-    for vec in vecs:
-        clamped_vecs.append(vec[:max_length])
-    mat = np.asarray(clamped_vecs)
-    cov_mat = np.cov(mat)
-    return cov_mat, rate
-
-def get_eigen_vecs(cov):
-    """
-    create a
-    :param cov: covariance matrix of multiple wav arrays
-    :return:
-    """
-    eigs = np.linalg.eig(cov) # eigs[0] == eigen values list eigs[1] == 2D array of eigenvectors
-    linear_combination = np.linalg.solve(eigs[1], eigs[0])
-    print(linear_combination)
-    final_wav_array = linear_combination
-    return final_wav_array# this isn't really supposed to be here but I use it for testing
-
-    #print(f"Program executed in {time.time() - start_time} seconds")
-
-
 ##################################MAIN#######################################
 if __name__ == "__main__":
-    avg = pca("Train")
+    vecs = read_vecs("Train")
+    coeff = np.random.randint(1, 3, (1, np.shape(vecs)[0]))
+    sum = combine(vecs, coeff, write_file=True, file_name="Train Eigs 50 Coeffs Random 1-2")
     # wav, rate = get_wave_array(input)
     # #wav = clip_start_and_end(wav)
     # print_wave(wav)
